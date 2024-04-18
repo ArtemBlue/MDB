@@ -28,10 +28,10 @@ const logCommandExecution = async (interaction) => {
 
                 // Handle subcommand group if present
                 if (interaction.options.getSubcommandGroup(false)) {
-                    let subcommandGroupName = interaction.options.getSubcommandGroup();
-                    let subcommandGroupOptions = commandOptions.find(opt => opt.name === subcommandGroupName);
+                    const subcommandGroupName = interaction.options.getSubcommandGroup();
+                    const subcommandGroupOptions = commandOptions.find(opt => opt.name === subcommandGroupName);
 
-                    if (subcommandGroupName) {
+                    if (subcommandGroupName && subcommandGroupOptions) {
                         commandName += ` ${subcommandGroupName}`;
                         commandOptions = subcommandGroupOptions.options;
                     }
@@ -39,34 +39,66 @@ const logCommandExecution = async (interaction) => {
 
                 // Handle subcommand if present
                 if (interaction.options.getSubcommand(false)) {
-                    let subcommandName = interaction.options.getSubcommand();
-                    let subcommandOptions = commandOptions.find(opt => opt.name === subcommandName);
+                    const subcommandName = interaction.options.getSubcommand();
+                    const subcommandOptions = commandOptions.find(opt => opt.name === subcommandName);
 
-                    if (subcommandName) {
+                    if (subcommandName && subcommandOptions) {
                         commandName += ` ${subcommandName}`;
                         commandOptions = subcommandOptions.options;
                     }
                 }
         
-                // Format options
-                let options = commandOptions.map(opt => {
-                    // Convert channel ID to mention format
-                    let value = opt.value;
-                    if (opt.type === 'CHANNEL' && value) {
-                        const channel = interaction.client.channels.cache.get(value);
-                        if (channel) {
-                            value = channel.toString(); // Convert channel ID to mention format
+                // Function to format options and convert IDs to mentions
+                const formatOptions = (options) => {
+                    return options.map(opt => {
+                        let value = opt.value;
+
+                        // Convert option value based on its type
+                        if (opt.type === 'CHANNEL') {
+                            // Convert channel ID to channel mention
+                            const channel = interaction.client.channels.cache.get(value);
+                            if (channel) {
+                                value = channel.toString(); // Convert channel ID to mention format
+                            }
+                        } else if (opt.type === 'USER') {
+                            // Convert user ID to user mention
+                            const user = interaction.client.users.cache.get(value);
+                            if (user) {
+                                value = user.toString(); // Convert user ID to mention format
+                            }
+                        } else {
+                            // Otherwise, just use the option's value as is
+                            value = opt.value;
                         }
-                    }
-                    return `${opt.name}: ${value ?? 'Not provided'}`;
-                }).join(', ') || 'No options';
+
+                        // Return formatted option
+                        return `${opt.name}: ${value ?? 'Not provided'}`;
+                    });
+                };
+
+                // Format the options
+                const formattedOptions = formatOptions(commandOptions);
+                const optionsString = formattedOptions.join(', ') || 'No options';
+
+                // Create the full command string
+                let fullCommand = `/${interaction.commandName}`;
+                if (interaction.options.getSubcommandGroup(false)) {
+                    fullCommand += ` ${interaction.options.getSubcommandGroup()}`;
+                }
+                if (interaction.options.getSubcommand(false)) {
+                    fullCommand += ` ${interaction.options.getSubcommand()}`;
+                }
+                if (formattedOptions.length > 0) {
+                    fullCommand += ` ${formattedOptions.join(' ')}`;
+                }
 
                 // Create embed
                 const embed = new EmbedBuilder()
                     .setTitle('Command Executed:')
                     .addFields(
                         { name: 'Name', value: commandName },
-                        { name: 'Options', value: options },
+                        { name: 'Options', value: optionsString },
+                        { name: 'Command', value: fullCommand }, // Add full command
                         { name: 'User', value: `<@${interaction.user.id}>` } // Tag the user who ran the command
                     )
                     .setFooter({ text: `Ran on ${new Date().toLocaleString()}` });

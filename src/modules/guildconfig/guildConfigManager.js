@@ -2,11 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 // File path to the guild configurations
-const guildConfigsPath = path.join(__dirname, '..', 'persistentdata', 'guilds.json');
+const guildConfigsPath = path.join(__dirname, '..', '..',  'persistentdata', 'guilds.json');
 
 // Ensure the persistentdata folder and guilds.json file exist
 const ensureDataFileExists = () => {
-    const persistentDataPath = path.join(__dirname, '..', 'persistentdata');
+    const persistentDataPath = path.join(__dirname, '..', '..', 'persistentdata');
 
     // Check if persistentdata folder exists
     if (!fs.existsSync(persistentDataPath)) {
