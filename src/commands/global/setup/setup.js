@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { readGuildConfigs, writeGuildConfigs } = require('../../../modules/guildConfigManager.js');
+const { readGuildConfigs, writeGuildConfigs } = require('../../../modules/guildconfig/guildConfigManager.js');
 
 const setupCommand = {
     data: new SlashCommandBuilder()
@@ -66,7 +66,7 @@ const setupCommand = {
                     // Set the specified setting
                     guildConfigs.guilds[guildId][configKey] = channel.id;
                     writeGuildConfigs(guildConfigs);
-                    await interaction.reply(`${successMessage} ${channel.name}`);
+                    await interaction.reply(`${successMessage} ${channel.toString()}`); // Display channel name
                 } else {
                     await interaction.reply(`Please specify a channel to set as the ${configKey}.`);
                 }
