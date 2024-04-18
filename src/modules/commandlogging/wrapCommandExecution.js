@@ -1,7 +1,5 @@
-const fs = require('node:fs');
-const path = require('node:path');
 const { EmbedBuilder } = require('discord.js');
-const { readGuildConfigs } = require('../guildConfigManager');
+const { readGuildConfigs } = require('../guildconfig/guildConfigManager');
 
 // Define the logCommandExecution function
 const logCommandExecution = async (interaction) => {
@@ -23,44 +21,52 @@ const logCommandExecution = async (interaction) => {
         if (logChannelId) {
             const logChannel = interaction.client.channels.cache.get(logChannelId);
             if (logChannel) {
-                const commandName = interaction.commandName;
+                let commandName = interaction.commandName;
 
-                // Get the options and handle undefined values gracefully
-                const options = interaction.options.data.map(opt => {
-                    let optionValue = opt.value;
+                // Extracting options, subcommand, and subcommand group
+                let commandOptions = interaction.options.data;
 
-                    // Handle undefined option values by using a default message
-                    if (optionValue === undefined) {
-                        optionValue = 'Not provided';
+                // Handle subcommand group if present
+                if (interaction.options.getSubcommandGroup(false)) {
+                    let subcommandGroupName = interaction.options.getSubcommandGroup();
+                    let subcommandGroupOptions = commandOptions.find(opt => opt.name === subcommandGroupName);
+
+                    if (subcommandGroupName) {
+                        commandName += ` ${subcommandGroupName}`;
+                        commandOptions = subcommandGroupOptions.options;
                     }
+                }
 
-                    // Handle CHANNEL type options by fetching the channel name
-                    if (opt.type === 'CHANNEL') {
-                        const channel = interaction.guild.channels.cache.get(opt.value);
+                // Handle subcommand if present
+                if (interaction.options.getSubcommand(false)) {
+                    let subcommandName = interaction.options.getSubcommand();
+                    let subcommandOptions = commandOptions.find(opt => opt.name === subcommandName);
+
+                    if (subcommandName) {
+                        commandName += ` ${subcommandName}`;
+                        commandOptions = subcommandOptions.options;
+                    }
+                }
+        
+                // Format options
+                let options = commandOptions.map(opt => {
+                    // Convert channel ID to mention format
+                    let value = opt.value;
+                    if (opt.type === 'CHANNEL' && value) {
+                        const channel = interaction.client.channels.cache.get(value);
                         if (channel) {
-                            optionValue = channel.name;
-                        } else {
-                            optionValue = `Unknown channel (ID: ${opt.value})`;
+                            value = channel.toString(); // Convert channel ID to mention format
                         }
                     }
+                    return `${opt.name}: ${value ?? 'Not provided'}`;
+                }).join(', ') || 'No options';
 
-                    // Tag users and roles
-                    if (opt.type === 'USER') {
-                        optionValue = `<@${opt.value}>`;
-                    } else if (opt.type === 'ROLE') {
-                        optionValue = `<@&${opt.value}>`;
-                    } else if (opt.type === 'CHANNEL') {
-                        optionValue = `<#${opt.value}>`;
-                    }
-
-                    return `${opt.name}: ${optionValue}`;
-                }).join(', ');
-
+                // Create embed
                 const embed = new EmbedBuilder()
                     .setTitle('Command Executed:')
                     .addFields(
                         { name: 'Name', value: commandName },
-                        { name: 'Options', value: options || 'No options' },
+                        { name: 'Options', value: options },
                         { name: 'User', value: `<@${interaction.user.id}>` } // Tag the user who ran the command
                     )
                     .setFooter({ text: `Ran on ${new Date().toLocaleString()}` });
