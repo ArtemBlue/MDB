@@ -3,7 +3,7 @@ const path = require('path');
 
 // Function to read the guild configuration from guilds.json
 const readGuildConfig = () => {
-    const guildConfigPath = path.resolve(__dirname, '../persistentdata/guilds.json');
+    const guildConfigPath = path.resolve(__dirname, '../../persistentdata/guilds.json');
     const data = fs.readFileSync(guildConfigPath, 'utf-8');
     return JSON.parse(data);
 };

@@ -4,6 +4,7 @@ const configPath = require('path').join(__dirname, 'configs/config.json');
 const config = require('fs').readFileSync(configPath, 'utf-8');
 const { token, guildId } = JSON.parse(config);
 const handleInteractionCreate = require('./modules/interactionhandler/interactionHandler');
+const handleWelcome = require('./modules/welcomehandler/welcomeHandler'); // Import welcomeHandler
 
 const client = new Client({
     intents: [
@@ -28,6 +29,9 @@ client.once('ready', async () => {
 
     // Set the bot's activity
     client.user.setActivity('Serving the server!');
+
+    // Initialize welcomeHandler
+    handleWelcome(client);
 });
 
 // Set up the interaction handler using the function from interactionHandler.js
