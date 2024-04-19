@@ -1,6 +1,5 @@
-// Import required modules
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, PermissionsBitField } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
@@ -9,33 +8,20 @@ const logCommand = {
     data: new SlashCommandBuilder()
         .setName('log')
         .setDescription('Display command logs with filtering and pagination options.')
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.ViewAuditLog)
         .addUserOption(option => option
             .setName('user')
             .setDescription('Filter logs by user.')
             .setRequired(false)
         )
-        .addStringOption(option => option
-            .setName('earlierthan')
-            .setDescription('Filter logs earlier than a specific time (e.g., 1d, 7d, 30d, 180d, 1y).')
-            .addChoices(
-                { name: '1 day', value: '1d' },
-                { name: '7 days', value: '7d' },
-                { name: '30 days', value: '30d' },
-                { name: '180 days', value: '180d' },
-                { name: '1 year', value: '1y' }
-            )
+        .addIntegerOption(option => option
+            .setName('olderthan')
+            .setDescription('Filter logs older than a specific number of days (e.g., 5).')
             .setRequired(false)
         )
-        .addStringOption(option => option
-            .setName('olderthan')
-            .setDescription('Filter logs older than a specific time (e.g., 1d, 7d, 30d, 180d, 1y).')
-            .addChoices(
-                { name: '1 day', value: '1d' },
-                { name: '7 days', value: '7d' },
-                { name: '30 days', value: '30d' },
-                { name: '180 days', value: '180d' },
-                { name: '1 year', value: '1y' }
-            )
+        .addIntegerOption(option => option
+            .setName('youngerthan')
+            .setDescription('Filter logs younger than a specific number of days (e.g., 30).')
             .setRequired(false)
         ),
     async execute(interaction) {
@@ -53,9 +39,9 @@ const logCommand = {
             logLines = logLines.reverse(); // Reverse the order of log lines
 
             const userOption = interaction.options.getUser('user');
-            const earlierThanOption = interaction.options.getString('earlierthan');
-            const olderThanOption = interaction.options.getString('olderthan');
-            
+            const olderThanOption = interaction.options.getInteger('olderthan');
+            const youngerThanOption = interaction.options.getInteger('youngerthan');
+
             // Apply filtering
             let filteredLogs = logLines;
 
@@ -65,24 +51,37 @@ const logCommand = {
                 filteredLogs = filteredLogs.filter(line => line.includes(`User: ${userOption.tag}`) || line.includes(`(${userId})`));
             }
 
-            // Filter logs based on time ranges
-            const parseTimeRange = (range) => {
-                const quantity = parseInt(range);
-                const unit = range.endsWith('d') ? 'days' : range.endsWith('y') ? 'years' : null;
-                return { quantity, unit };
-            };
+            // Parse the olderthan and youngerthan options
+            const parseDays = (days) => moment().subtract(days, 'days').toISOString();
 
-            if (earlierThanOption) {
-                const { quantity, unit } = parseTimeRange(earlierThanOption);
-                const targetDate = moment().subtract(quantity, unit);
-                filteredLogs = filteredLogs.filter(line => moment(line.split('|')[0]).isBefore(targetDate));
+            // Filter logs based on older than option
+            let targetOlderThanDate = null;
+            if (olderThanOption !== null) {
+                targetOlderThanDate = parseDays(olderThanOption);
             }
 
-            if (olderThanOption) {
-                const { quantity, unit } = parseTimeRange(olderThanOption);
-                const targetDate = moment().subtract(quantity, unit);
-                filteredLogs = filteredLogs.filter(line => moment(line.split('|')[0]).isAfter(targetDate));
+            // Filter logs based on younger than option
+            let targetYoungerThanDate = null;
+            if (youngerThanOption !== null) {
+                targetYoungerThanDate = parseDays(youngerThanOption);
             }
+
+            // Apply the date range filters
+            filteredLogs = filteredLogs.filter(line => {
+                const logDate = line.split('|')[0];
+                
+                let olderThanCheck = true;
+                if (targetOlderThanDate) {
+                    olderThanCheck = logDate < targetOlderThanDate;
+                }
+
+                let youngerThanCheck = true;
+                if (targetYoungerThanDate) {
+                    youngerThanCheck = logDate > targetYoungerThanDate;
+                }
+                
+                return olderThanCheck && youngerThanCheck;
+            });
 
             if (filteredLogs.length === 0) {
                 await interaction.reply({ content: 'No logs found for the specified filters.', ephemeral: true });
@@ -94,25 +93,30 @@ const logCommand = {
             let currentPage = 1;
             const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
 
+            // Calculate the total number of logs
+            const totalLogs = filteredLogs.length;
+
             // Function to create an embed for the current page
-            const createEmbed = (logs, pageNumber) => {
+            const createEmbed = (logs, pageNumber, totalLogs) => {
                 // Calculate the start and end index for the current page
                 const startIndex = (pageNumber - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
 
                 // Extract the logs for the current page
-                const currentLogs = logs.slice(startIndex, endIndex).join('\n');
+                const currentLogs = logs.slice(startIndex, endIndex)
+                    .map((log, index) => `${startIndex + index + 1}: ${log}`)
+                    .join('\n');
 
                 // Create an embed with the title including the number of logs and the current page
                 return new EmbedBuilder()
-                    .setTitle(`Command Logs - Page ${pageNumber} of ${totalPages}`)
+                    .setTitle(`Command Logs (${totalLogs} Commands) - Page ${pageNumber} of ${totalPages}`)
                     .setDescription(currentLogs)
                     .setColor('#00FF00')
                     .setFooter({ text: `Requested by ${interaction.user.tag}` });
             };
 
             // Create the initial embed and navigation buttons
-            let currentEmbed = createEmbed(filteredLogs, currentPage);
+            let currentEmbed = createEmbed(filteredLogs, currentPage, totalLogs);
 
             // Create navigation buttons
             const row = new ActionRowBuilder()
@@ -134,7 +138,7 @@ const logCommand = {
 
             // Handle button interaction for pagination
             const filter = i => i.user.id === interaction.user.id && ['prev', 'next'].includes(i.customId);
-            const collector = reply.createMessageComponentCollector({ filter, time: 30000 }); // Collect interactions for 30 seconds
+            const collector = reply.createMessageComponentCollector({ filter, time: 30000 });
 
             collector.on('collect', async i => {
                 if (i.customId === 'prev') {
@@ -144,7 +148,7 @@ const logCommand = {
                 }
 
                 // Update the current embed and navigation buttons
-                currentEmbed = createEmbed(filteredLogs, currentPage);
+                currentEmbed = createEmbed(filteredLogs, currentPage, totalLogs);
                 const newRow = new ActionRowBuilder()
                     .addComponents(
                         new ButtonBuilder()
