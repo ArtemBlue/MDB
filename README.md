@@ -32,7 +32,7 @@ You have two options for installing the Modular Discord Bot:
 
 2. **Navigate to the project directory**:
     ```sh
-    cd modulardiscordbot
+    cd mdb
     ```
 
 3. **Install dependencies**:
