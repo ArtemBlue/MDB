@@ -9,20 +9,29 @@ const logCommand = {
         .setName('log')
         .setDescription('Display command logs with filtering and pagination options.')
         .setDefaultMemberPermissions(PermissionsBitField.Flags.ViewAuditLog)
-        .addUserOption(option => option
-            .setName('user')
-            .setDescription('Filter logs by user.')
-            .setRequired(false)
+        .addUserOption(option =>
+            option
+                .setName('user')
+                .setDescription('Filter logs by user.')
+                .setRequired(false)
         )
-        .addIntegerOption(option => option
-            .setName('olderthan')
-            .setDescription('Filter logs older than a specific number of days (e.g., 5).')
-            .setRequired(false)
+        .addIntegerOption(option =>
+            option
+                .setName('olderthan')
+                .setDescription('Filter logs older than a specific number of days (e.g., 5).')
+                .setRequired(false)
         )
-        .addIntegerOption(option => option
-            .setName('youngerthan')
-            .setDescription('Filter logs younger than a specific number of days (e.g., 30).')
-            .setRequired(false)
+        .addIntegerOption(option =>
+            option
+                .setName('youngerthan')
+                .setDescription('Filter logs younger than a specific number of days (e.g., 30).')
+                .setRequired(false)
+        )
+        .addStringOption(option =>
+            option
+                .setName('contains')
+                .setDescription('Filter logs containing specific words.')
+                .setRequired(false)
         ),
     async execute(interaction) {
         try {
@@ -41,6 +50,7 @@ const logCommand = {
             const userOption = interaction.options.getUser('user');
             const olderThanOption = interaction.options.getInteger('olderthan');
             const youngerThanOption = interaction.options.getInteger('youngerthan');
+            const containsOption = interaction.options.getString('contains');
 
             // Apply filtering
             let filteredLogs = logLines;
@@ -82,6 +92,11 @@ const logCommand = {
                 
                 return olderThanCheck && youngerThanCheck;
             });
+
+            // Apply the contains filter
+            if (containsOption) {
+                filteredLogs = filteredLogs.filter(line => line.includes(containsOption));
+            }
 
             if (filteredLogs.length === 0) {
                 await interaction.reply({ content: 'No logs found for the specified filters.', ephemeral: true });
