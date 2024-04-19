@@ -11,7 +11,7 @@ const configPath = path.join(__dirname, 'configs/config.json');
 
 // Function to initialize the bot
 const initializeBot = async (config) => {
-    const { token, guildId } = config;
+    const { token, guildId, activityMessage } = config;
 
     // Create a new Discord client instance
     const client = new Client({
@@ -36,7 +36,7 @@ const initializeBot = async (config) => {
         console.log('Commands registered successfully.');
 
         // Set the bot's activity
-        client.user.setActivity('Serving the server!');
+        client.user.setActivity(activityMessage);
 
         // Initialize welcomeHandler
         handleWelcome(client);

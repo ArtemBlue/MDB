@@ -33,9 +33,10 @@ const handleFirstTimeRun = async () => {
     const token = await promptUserInput('Discord bot token: ');
     const clientId = await promptUserInput('Discord client ID: ');
     const guildId = await promptUserInput('Guild ID: ');
+    const activityMessage = await promptUserInput('Bot activity message: ');
 
     // Create the config.json file with the user's inputs
-    const configData = JSON.stringify({ token, clientId, guildId }, null, 2);
+    const configData = JSON.stringify({ token, clientId, guildId, activityMessage }, null, 2);
     fs.writeFileSync(configPath, configData);
     console.log('Configuration file created successfully.');
 };
