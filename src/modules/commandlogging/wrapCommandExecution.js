@@ -17,8 +17,18 @@ const logCommandExecution = async (interaction) => {
             return;
         }
 
-        // Retrieve guild ID and log file path
+        // Retrieve guild ID and check if persistent logging is enabled
         const guildId = interaction.guildId;
+        const guildConfig = guildConfigs.guilds[guildId];
+        const persistentLogs = guildConfig ? guildConfig.persistentLogs : false;
+
+        // If persistent logging is disabled, skip logging the command execution
+        if (!persistentLogs) {
+            console.log(`Persistent logging is disabled for guild ID: ${guildId}. Skipping log.`);
+            return;
+        }
+
+        // Retrieve the log file path
         const logFilePath = path.join(__dirname, '../../persistentdata', `${guildId}_cmdlogs.log`);
 
         // Ensure the persistentdata directory exists
@@ -52,7 +62,7 @@ const logCommandExecution = async (interaction) => {
         console.log('Command execution logged successfully.');
 
         // Log to Discord channel if configured
-        const logChannelId = guildConfigs.guilds[guildId]?.logChannel;
+        const logChannelId = guildConfig ? guildConfig.logChannel : null;
         if (logChannelId) {
             const logChannel = interaction.client.channels.cache.get(logChannelId);
             if (logChannel) {
@@ -81,7 +91,6 @@ const logCommandExecution = async (interaction) => {
         console.error('Error logging command execution:', error);
     }
 };
-
 
 // Define the wrapCommandExecution function
 const wrapCommandExecution = (command) => {
