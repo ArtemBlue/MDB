@@ -1,6 +1,6 @@
 // Import required modules
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, PermissionsBitField} = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
@@ -9,6 +9,7 @@ const logCommand = {
     data: new SlashCommandBuilder()
         .setName('log')
         .setDescription('Display command logs with filtering and pagination options.')
+        .setDefaultMemberPermissions(PermissionsBitField.Flags.ViewAuditLog)
         .addUserOption(option => option
             .setName('user')
             .setDescription('Filter logs by user.')
