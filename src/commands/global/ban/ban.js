@@ -1,4 +1,6 @@
-const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 
 const banCommand = {
     data: new SlashCommandBuilder()
@@ -34,18 +36,43 @@ const banCommand = {
         const guild = interaction.guild;
 
         if (subcommand === 'user') {
-            // Handle /ban user <@user> [reason]
             const userToBan = interaction.options.getUser('user');
             const reason = interaction.options.getString('reason') || 'No reason provided';
-            
-            try {
-                await guild.members.ban(userToBan.id, { reason });
-                await interaction.reply(`Banned ${userToBan.tag} for reason: ${reason}`);
-            } catch (error) {
-                console.error(`Error banning user: ${error}`);
-                await interaction.reply(`Failed to ban user: ${userToBan.tag}`);
-            }
 
+            // Load the guilds.json file
+            const guildConfigPath = path.join(__dirname, '../../../persistentdata/guilds.json');
+            const guildsData = JSON.parse(fs.readFileSync(guildConfigPath, 'utf-8'));
+
+            // Get ban-proof roles for the guild
+            const guildConfig = guildsData.guilds[guild.id];
+            const banProofRoles = guildConfig ? guildConfig.banProofRoles : [];
+
+            // Fetch the member and check their roles
+            const member = await guild.members.fetch(userToBan.id);
+            const hasBanProofRole = member.roles.cache.some(role => banProofRoles.includes(role.id));
+
+            if (hasBanProofRole) {
+                // User has a ban-proof role; ban is not allowed
+                await interaction.reply({
+                    content: `User ${userToBan.tag} has a ban-proof role and cannot be banned.`,
+                    ephemeral: true
+                });
+            } else {
+                // Proceed with the ban
+                try {
+                    await guild.members.ban(userToBan.id, { reason });
+                    await interaction.reply({
+                        content: `Banned ${userToBan.tag} for reason: ${reason}`,
+                        ephemeral: true
+                    });
+                } catch (error) {
+                    console.error(`Error banning user: ${error}`);
+                    await interaction.reply({
+                        content: `Failed to ban user: ${userToBan.tag}`,
+                        ephemeral: true
+                    });
+                }
+            }
         } else if (subcommand === 'list') {
             // Handle /ban list
             try {
@@ -125,7 +152,7 @@ const banCommand = {
                                     .setStyle(ButtonStyle.Primary)
                                     .setDisabled(currentPage === totalPages)
                             );
-                        
+
                         // Edit the original reply to reflect the changes
                         await i.update({ embeds: [currentEmbed], components: [newRow] });
                     });
