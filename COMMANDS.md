@@ -1,5 +1,15 @@
 # `/setup` Command
 
+This document provides an overview of the commands available in the Modular Discord Bot. Users with appropriate permissions can execute these commands in Discord.
+
+## Table of Contents
+
+- [Setup Commands](#setup-command)
+- [Ban Commands](#ban-command)
+
+
+# `/setup` Command
+
 The `/setup` command allows server administrators to configure various aspects of the Discord server using the Modular Discord Bot. This includes setting up welcome channels, custom welcome messages, and log channels.
 
 ## Usage
@@ -50,7 +60,7 @@ The `/setup` command allows server administrators to configure various aspects o
 
 # `/ban` Command
 
-This document provides an overview of the commands available in the Modular Discord Bot. Users with appropriate permissions can execute these commands in Discord.
+The `/setup` command allows server administrators to utilize various ban features for Modular Discord Bot. This includes setting up welcome ban user, unban, and list banned users.
 
 ## Table of Contents
 
