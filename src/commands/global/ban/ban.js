@@ -53,7 +53,7 @@ const banCommand = {
                 const banCount = bans.size;
 
                 if (banCount === 0) {
-                    await interaction.reply('There are 0 banned users.', { ephemeral: true });
+                    await interaction.reply({ content: 'There are 0 banned users.', ephemeral: true });
                 } else {
                     const itemsPerPage = 5; // Number of banned users per page
                     let currentPage = 1;
@@ -151,7 +151,7 @@ const banCommand = {
                 }
             } catch (error) {
                 console.error(`Error fetching banned users list: ${error}`);
-                await interaction.reply('Failed to fetch banned users list.', { ephemeral: true });
+                await interaction.reply({ content: 'Failed to fetch banned users list.', ephemeral: true });
             }
 
         } else if (subcommand === 'unban') {
