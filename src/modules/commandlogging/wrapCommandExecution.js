@@ -50,11 +50,13 @@ const logCommandExecution = async (interaction) => {
         const userName = interaction.user.tag;
         const userId = interaction.user.id;
 
-        // Format the options into a string
-        const formattedOptions = interaction.options.data.map(opt => `${opt.name}: ${opt.value}`).join(', ') || 'No options';
+        // Get the full command input message from the interaction object
+        // This example assumes you are using a text-based command input system
+        // Adjust this line as necessary if you are using a different interaction system
+        const fullCommand = interaction.toString() || `/${commandName} ${interaction.options.data.map(opt => opt.value).join(' ')}`;
 
         // Create log entry string
-        const logEntry = `${timestamp} | User: ${userName} (${userId}) | Command: /${commandName} ${formattedOptions}`;
+        const logEntry = `${timestamp} | User: ${userName} (${userId}) | Full Command: ${fullCommand}`;
 
         // Append log entry to the log file
         fs.appendFileSync(logFilePath, logEntry + '\n', 'utf-8');
@@ -70,8 +72,7 @@ const logCommandExecution = async (interaction) => {
                 const embed = new EmbedBuilder()
                     .setTitle('Command Executed:')
                     .addFields(
-                        { name: 'Name', value: commandName },
-                        { name: 'Options', value: formattedOptions },
+                        { name: 'Full Command', value: fullCommand },
                         { name: 'User', value: `<@${userId}>` }
                     )
                     .setFooter({ text: `Ran on ${new Date().toLocaleString()}` });
