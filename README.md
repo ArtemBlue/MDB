@@ -8,6 +8,7 @@ Modular Discord Bot because bored. Purpose? None. Is it better? Probably not.
 - [Setup](#setup)
 - [Running the Bot](#running-the-bot)
 - [Troubleshooting](#troubleshooting)
+- [Commands](https://github.com/ArtemBlue/MDB/blob/main/COMMANDS.md)
 
 ## Prerequisites
 
@@ -102,3 +103,5 @@ If you encounter any issues, try the following:
 - **Restart the bot**: Sometimes, restarting the bot can resolve issues.
 
 If you continue to experience problems, you can seek help from the Discord.js community or other relevant forums.
+
+Check out [Commands](https://github.com/ArtemBlue/MDB/blob/main/COMMANDS.md).
