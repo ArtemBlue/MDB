@@ -93,25 +93,30 @@ const logCommand = {
             let currentPage = 1;
             const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
 
+            // Calculate the total number of logs
+            const totalLogs = filteredLogs.length;
+
             // Function to create an embed for the current page
-            const createEmbed = (logs, pageNumber) => {
+            const createEmbed = (logs, pageNumber, totalLogs) => {
                 // Calculate the start and end index for the current page
                 const startIndex = (pageNumber - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
 
                 // Extract the logs for the current page
-                const currentLogs = logs.slice(startIndex, endIndex).join('\n');
+                const currentLogs = logs.slice(startIndex, endIndex)
+                    .map((log, index) => `${startIndex + index + 1}: ${log}`)
+                    .join('\n');
 
                 // Create an embed with the title including the number of logs and the current page
                 return new EmbedBuilder()
-                    .setTitle(`Command Logs - Page ${pageNumber} of ${totalPages}`)
+                    .setTitle(`Command Logs (${totalLogs} Commands) - Page ${pageNumber} of ${totalPages}`)
                     .setDescription(currentLogs)
                     .setColor('#00FF00')
                     .setFooter({ text: `Requested by ${interaction.user.tag}` });
             };
 
             // Create the initial embed and navigation buttons
-            let currentEmbed = createEmbed(filteredLogs, currentPage);
+            let currentEmbed = createEmbed(filteredLogs, currentPage, totalLogs);
 
             // Create navigation buttons
             const row = new ActionRowBuilder()
@@ -133,7 +138,7 @@ const logCommand = {
 
             // Handle button interaction for pagination
             const filter = i => i.user.id === interaction.user.id && ['prev', 'next'].includes(i.customId);
-            const collector = reply.createMessageComponentCollector({ filter, time: 30000 }); // Collect interactions for 30 seconds
+            const collector = reply.createMessageComponentCollector({ filter, time: 30000 });
 
             collector.on('collect', async i => {
                 if (i.customId === 'prev') {
@@ -143,7 +148,7 @@ const logCommand = {
                 }
 
                 // Update the current embed and navigation buttons
-                currentEmbed = createEmbed(filteredLogs, currentPage);
+                currentEmbed = createEmbed(filteredLogs, currentPage, totalLogs);
                 const newRow = new ActionRowBuilder()
                     .addComponents(
                         new ButtonBuilder()
