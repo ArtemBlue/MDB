@@ -1,10 +1,10 @@
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require('fs');
+const path = require('path');
 const { Collection } = require('discord.js');
 const { wrapCommandExecution } = require('../commandlogging/wrapCommandExecution');
 
 // Function to load commands from a directory
-function loadCommandsFromDirectory(collection, directory) {
+function loadCommandsFromDirectory(collection, directory, commandType) {
     try {
         // Read command files in the directory
         const commandFiles = fs.readdirSync(directory).filter(file => file.endsWith('.js'));
@@ -17,8 +17,11 @@ function loadCommandsFromDirectory(collection, directory) {
             if (command && command.data && command.execute) {
                 // Wrap the entire command object using wrapCommandExecution
                 const wrappedCommand = wrapCommandExecution(command);
+
+                // Log the command being added for debugging
+                console.log(`Adding command: ${wrappedCommand.data.name} from ${commandPath}`);
+
                 collection.set(wrappedCommand.data.name, wrappedCommand);
-                console.log(`Loaded and wrapped command: ${wrappedCommand.data.name}`);
             } else {
                 console.warn(`Skipping file ${file}: missing 'data' or 'execute' property.`);
             }
@@ -31,7 +34,7 @@ function loadCommandsFromDirectory(collection, directory) {
 
         for (const subDir of subDirs) {
             const subDirPath = path.join(directory, subDir);
-            loadCommandsFromDirectory(collection, subDirPath);
+            loadCommandsFromDirectory(collection, subDirPath, commandType);
         }
     } catch (error) {
         console.error(`Error loading commands from ${directory}:`, error);
@@ -40,61 +43,46 @@ function loadCommandsFromDirectory(collection, directory) {
 
 // Function to load commands into the client
 function loadCommands(client) {
-    // Create a collection for commands if it doesn't exist
+    // Create a new collection for commands
     client.commands = new Collection();
 
-    // Load commands from the directory
+    // Load commands from the specified directory
     const commandsPath = path.join(__dirname, '..', '..', 'commands');
-    loadCommandsFromDirectory(client.commands, commandsPath);
+    
+    // Load global and guild commands from separate directories
+    const globalCommandsPath = path.join(commandsPath, 'global');
+    const guildCommandsPath = path.join(commandsPath, 'guild');
 
-    // Initialize global and guild commands collections
+    // Load global commands into the global commands collection
     client.globalCommands = new Collection();
-    client.guildCommands = new Collection();
+    loadCommandsFromDirectory(client.globalCommands, globalCommandsPath);
 
-    // Separate the global and guild commands
-    client.commands.forEach((command, name) => {
-        if (command.guildOnly) {
-            client.guildCommands.set(name, command);
-        } else {
-            client.globalCommands.set(name, command);
-        }
-    });
+    // Load guild commands into the guild commands collection
+    client.guildCommands = new Collection();
+    loadCommandsFromDirectory(client.guildCommands, guildCommandsPath);
+
+    // Combine the collections into a single commands collection
+    client.commands = new Collection([...client.globalCommands, ...client.guildCommands]);
+
+    console.log('Commands loaded and separated successfully.');
 }
 
 // Function to register global and guild commands
 async function commandLoader(client, guildId) {
     try {
-        // Check if global commands exist
-        if (!client.globalCommands) {
-            console.error('Global commands collection is undefined.');
-            return;
-        }
-
         // Register global commands
-        const globalCommands = client.globalCommands.map(cmd => cmd.data.toJSON());
-        if (globalCommands && globalCommands.length > 0) {
+        if (client.globalCommands && client.globalCommands.size > 0) {
+            const globalCommands = client.globalCommands.map(cmd => cmd.data.toJSON());
             await client.application.commands.set(globalCommands);
             console.log('Global commands registered!');
-        } else {
-            console.warn('No global commands found to register.');
         }
 
-        // Register guild commands if guildId is provided
-        if (guildId) {
-            // Check if guild commands exist
-            if (!client.guildCommands) {
-                console.error(`Guild commands collection is undefined for guild ID: ${guildId}`);
-                return;
-            }
-
+        // Register guild commands
+        if (guildId && client.guildCommands && client.guildCommands.size > 0) {
+            const guild = await client.guilds.fetch(guildId);
             const guildCommands = client.guildCommands.map(cmd => cmd.data.toJSON());
-            if (guildCommands && guildCommands.length > 0) {
-                const guild = await client.guilds.fetch(guildId);
-                await guild.commands.set(guildCommands);
-                console.log(`Commands registered for guild ID: ${guildId}`);
-            } else {
-                console.warn(`No guild commands found to register for guild ID: ${guildId}`);
-            }
+            await guild.commands.set(guildCommands);
+            console.log(`Guild commands registered for guild ID: ${guildId}`);
         }
     } catch (error) {
         console.error('Error registering commands:', error);

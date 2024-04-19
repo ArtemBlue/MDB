@@ -9,8 +9,15 @@ function handleInteractionCreate(client) {
         // Check if the interaction is a chat input command
         if (!interaction.isChatInputCommand()) return;
 
+        // Log the interaction command name for debugging
+        console.log(`Interaction command name: ${interaction.commandName}`);
+
         // Get the command from the client commands collection
         const command = client.commands.get(interaction.commandName);
+
+        // Log available commands for debugging
+        //console.log(`Available commands in collection:`, client.commands.keys());
+
         if (!command) {
             console.error(`No command matching ${interaction.commandName} found.`);
             return;

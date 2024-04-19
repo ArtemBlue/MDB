@@ -1,10 +1,10 @@
-const { Client, GatewayIntentBits, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { loadCommands, commandLoader } = require('./modules/commandloading/commandLoader');
 const fs = require('fs');
 const path = require('path');
 const handleInteractionCreate = require('./modules/interactionhandler/interactionHandler');
-const handleWelcome = require('./modules/welcomehandler/welcomeHandler'); // Import welcomeHandler
-const handleFirstTimeRun = require('./modules/firsttimerun/setup'); // Import first-time run setup
+const handleWelcome = require('./modules/welcomehandler/welcomeHandler');
+const handleFirstTimeRun = require('./modules/firsttimerun/setup');
 
 // Path to the config.json file
 const configPath = path.join(__dirname, 'configs/config.json');
@@ -23,6 +23,9 @@ const initializeBot = async (config) => {
             GatewayIntentBits.MessageContent,
         ],
     });
+
+    // Initialize the commands collection
+    client.commands = new Collection();
 
     // Load commands
     loadCommands(client);
