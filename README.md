@@ -1,5 +1,5 @@
 # MDB
-Modular Discord Bot because bored. Purpose? None.Is it better? Probably not.
+Modular Discord Bot because bored. Purpose? None. Is it better? Probably not.
 
 ## Table of Contents
 
