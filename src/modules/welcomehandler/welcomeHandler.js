@@ -8,6 +8,12 @@ const readGuildConfig = () => {
     return JSON.parse(data);
 };
 
+// Function to write the updated guild configuration back to guilds.json
+const writeGuildConfig = (guildConfig) => {
+    const guildConfigPath = path.resolve(__dirname, '../../persistentdata/guilds.json');
+    fs.writeFileSync(guildConfigPath, JSON.stringify(guildConfig, null, 2), 'utf-8');
+};
+
 // Function to handle welcoming new members
 const handleWelcome = (client) => {
     // Event listener for when a new member joins a guild
@@ -28,7 +34,13 @@ const handleWelcome = (client) => {
 
                     // Send a welcome message to the welcome channel
                     if (welcomeChannel) {
-                        const welcomeMessage = `Welcome to the server, ${member.user}! We're glad to have you here.`;
+                        // Get the welcome message from the config or use a default message
+                        let welcomeMessage = guildConfig.guilds[guildId].welcomeMessage || `Welcome to the server, ${member.user}! We're glad to have you here.`;
+
+                        // Replace "[user]" with the actual mention of the new user
+                        welcomeMessage = welcomeMessage.replace('[user]', `<@${member.user.id}>`);
+
+                        // Send the welcome message
                         await welcomeChannel.send(welcomeMessage);
                         console.log(`Sent welcome message to ${member.user.tag} in channel ${welcomeChannel.name}`);
                     } else {
