@@ -24,10 +24,10 @@ const initializeBot = async (config) => {
         ],
     });
 
-    // Initialize the commands collection
+    // Initialize commands collection
     client.commands = new Collection();
 
-    // Load commands
+    // Load commands into the client
     loadCommands(client);
 
     // Event handler for when the client is ready
@@ -35,17 +35,21 @@ const initializeBot = async (config) => {
         console.log(`Logged in as ${client.user.tag}!`);
 
         // Register commands for global and guild scopes
-        await commandLoader(client, guildId);
-        console.log('Commands registered successfully.');
+        try {
+            await commandLoader(client, guildId);
+            console.log('Commands registered successfully.');
+        } catch (error) {
+            console.error('Error registering commands:', error);
+        }
 
         // Set the bot's activity
         client.user.setActivity(activityMessage);
 
-        // Initialize welcomeHandler
+        // Initialize welcome handler
         handleWelcome(client);
     });
 
-    // Set up the interaction handler using the function from interactionHandler.js
+    // Set up the interaction handler
     handleInteractionCreate(client);
 
     // Log in to Discord using the bot's token
