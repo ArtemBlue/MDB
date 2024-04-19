@@ -18,12 +18,16 @@ Before you begin, make sure you have the following installed:
 
 ## Installation
 
+You have two options for installing the Modular Discord Bot:
+
+### Option 1: Install from GitHub Repository
+
 1. **Clone the repository**:
     - Open a terminal or command prompt and navigate to the directory where you want to store the project.
     - Run the following command to clone the repository:
 
     ```sh
-    git clone https://github.com/yourusername/modulardiscordbot.git
+    git clone https://github.com/ArtemBlue/MDB.git
     ```
 
 2. **Navigate to the project directory**:
@@ -32,6 +36,25 @@ Before you begin, make sure you have the following installed:
     ```
 
 3. **Install dependencies**:
+    - Run the following command to install the required dependencies:
+
+    ```sh
+    npm install
+    ```
+
+### Option 2: Install from Releases
+
+1. **Download the latest release**:
+    - Go to the [Releases page](https://github.com/ArtemBlue/MDB/releases) of the GitHub repository.
+    - Download the latest release archive (e.g., a ZIP file) for your operating system.
+
+2. **Extract the archive**:
+    - Extract the contents of the archive to a directory of your choice.
+
+3. **Navigate to the extracted directory**:
+    - Open a terminal or command prompt and navigate to the directory where you extracted the archive.
+
+4. **Install dependencies**:
     - Run the following command to install the required dependencies:
 
     ```sh
