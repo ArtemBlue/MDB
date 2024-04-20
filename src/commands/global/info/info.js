@@ -36,6 +36,14 @@ const infoCommand = {
             const userStatus = member.presence?.status || 'offline'; // Fetch user's status
             console.log('User status:', userStatus);
 
+            // Get the user's activity
+            let activityString = 'None';
+            const activities = member.presence?.activities;
+            if (activities && activities.length > 0) {
+                const activity = activities[0];
+                activityString = activity.name;
+            }
+
             const iconUrl = {
                 online: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_online.png',
                 offline: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_offline.png',
@@ -70,6 +78,11 @@ const infoCommand = {
                     {
                         name: '**Status:**',
                         value: `${userStatus}`, // Use fetched status here
+                        inline: true,
+                    },
+                    {
+                        name: '**Activity:**',
+                        value: activityString,
                         inline: true,
                     },
                     {
