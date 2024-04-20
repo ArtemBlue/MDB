@@ -33,14 +33,22 @@ const infoCommand = {
             }
 
             const roles = member.roles.cache.filter(role => role.name !== '@everyone').map(role => role.name).join(', ') || 'None';
-            const userStatus = member.presence?.status || 'Offline'; // Fetch user's status
-            const activity = member.presence?.activities[0] || null; // Fetch user's activity
+            const userStatus = member.presence?.status || 'offline'; // Fetch user's status
+            console.log('User status:', userStatus);
+
+            const iconUrl = {
+                online: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_online.png',
+                offline: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_offline.png',
+                idle: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_idle.png',
+                dnd: 'https://raw.githubusercontent.com/ArtemBlue/MDB/main/src/assets/status_dnd.png',
+            }[userStatus];
+            console.log('Icon URL:', iconUrl);
 
             const embed = {
                 color: member.displayHexColor ? parseInt(member.displayHexColor.replace('#', ''), 16) : 0x000000,
                 author: {
                     name: `${targetUser.username}`,
-                    icon_url: targetUser.displayAvatarURL({ dynamic: true }),
+                    icon_url: iconUrl, // Dynamically change icon_url based on status
                 },
                 description: '__**User Information**__',
                 fields: [
@@ -61,12 +69,7 @@ const infoCommand = {
                     },
                     {
                         name: '**Status:**',
-                        value: userStatus,
-                        inline: true,
-                    },
-                    {
-                        name: '**Activity:**',
-                        value: activity ? activity.name : 'None',
+                        value: `${userStatus}`, // Use fetched status here
                         inline: true,
                     },
                     {
