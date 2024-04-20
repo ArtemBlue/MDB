@@ -21,6 +21,9 @@ const initializeBot = async (config) => {
             GatewayIntentBits.GuildMessages,
             GatewayIntentBits.GuildMessageReactions,
             GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildPresences,
+            GatewayIntentBits.GuildEmojisAndStickers,
+            GatewayIntentBits.GuildModeration,
         ],
     });
 
